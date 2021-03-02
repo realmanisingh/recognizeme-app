@@ -14,6 +14,7 @@ def get_embedding(img):
     return img_embedding
 
 
+
 def save_labeled_vec(vec: torch.Tensor, label: str, save_dir='./data'):
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
@@ -30,3 +31,5 @@ def save_labeled_vec(vec: torch.Tensor, label: str, save_dir='./data'):
     path = os.path.join(label_path, f'{next_i}.npy')
     np.save(path, vec.squeeze().numpy())
     print(f'saved vector to {path}')
+
+
