@@ -2,6 +2,7 @@
 # Original Author: Jacob Lawrence <https://stackoverflow.com/users/8736261/jacob-lawrence>
 # Licensed under CC-BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
 # Minor modifications made by Dharmesh Tarapore <dharmesh@cs.bu.eu>
+
 from flask import Flask, request, render_template
 from PIL import Image
 import torch
@@ -25,6 +26,23 @@ def test():
     return "hello world!"
 
 
+@app.route('/label')
+def label():
+    return render_template('./label.html')
+
+
+@app.route('/submit_label', methods=['POST'])
+def submit_label():
+    image = request.form['video_feed']
+    preprocessor = Preprocessor(image)
+    encoded = preprocessor.get_base64()
+    pixel_arr = preprocessor.decode_bytes(encoded)
+    img = preprocessor.get_cv2_image(pixel_arr)
+    vec = get_embedding(img)
+    save_labeled_vec(vec, request.form['label'])
+    return redirect('/label')
+
+
 @app.route('/submit', methods=['POST'])
 def submit():
     image = request.form['video_feed']
@@ -41,7 +59,7 @@ def submit():
 
 
     print(img)
-    vec = numpy_to_vector(img)
+    vec = get_embedding(img)
     print(vec.shape)
 
     if image:
