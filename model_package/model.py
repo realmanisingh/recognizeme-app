@@ -15,8 +15,11 @@ def get_embedding(img, prob_threshold=0.2):
     :param prob_threshold: the probability threshold to say there are no faces in the image
     :return: boolean: whether there is a face, tensor: the vector embedding
     """
-    img_cropped, prob = mtcnn(img, save_path=None, return_prob=True)
-    if prob[0] < prob_threshold:
+    try:
+        img_cropped, prob = mtcnn(img, save_path=None, return_prob=True)
+    except TypeError:
+        return False, None
+    if prob < prob_threshold:
         return False, None
     with torch.no_grad():
         img_embedding = resnet(img_cropped.unsqueeze(0))
