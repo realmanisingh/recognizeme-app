@@ -1,30 +1,23 @@
 import os
-
+from facenet_pytorch import MTCNN, InceptionResnetV1
+from sklearn import neighbors
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import LabelEncoder
+import torch
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import torch
-from facenet_pytorch import MTCNN, InceptionResnetV1
 
 mtcnn = MTCNN()
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
 
 
-def get_embedding(img, prob_threshold=0.2):
-    """
-    Get the vector embedding of a face from an image
-    :param img: the image to detect a face
-    :param prob_threshold: the probability threshold to say there are no faces in the image
-    :return: boolean: whether there is a face, tensor: the vector embedding
-    """
-    try:
-        img_cropped, prob = mtcnn(img, save_path=None, return_prob=True)
-    except TypeError:
-        return False, None
-    if prob < prob_threshold:
-        return False, None
+def get_embedding(img):
+    img_cropped = mtcnn(img, save_path=None)
     with torch.no_grad():
         img_embedding = resnet(img_cropped.unsqueeze(0))
-    return True, img_embedding
+    return img_embedding
+
 
 
 def save_labeled_vec(vec: torch.Tensor, label: str, save_dir='./data'):
@@ -80,3 +73,24 @@ def create_training_data(path: str) -> np.ndarray:
     
     return train_features, train_labels
                 
+
+def knn(features: np.ndarray, labels: np.ndarray) -> KNeighborsClassifier:
+    """
+    Initialize a KNN classifier on the image data
+    
+    Parameters:
+        features (numpy array): matrix where each row are the pixel values for an image
+        labels (numpy array): vector where each value is the label for the corresponding row
+        
+    Returns:
+        knn_model (KNeighborsClassifer): a scikit-learn knn classifer
+    """
+    labels = labels.reshape((labels.shape[0], 1))
+    le = LabelEncoder()
+    labels = le.fit_transform(labels)
+    
+    model = KNeighborsClassifier(n_neighbors=n)
+    model.fit(features, labels)
+        
+    return model
+
