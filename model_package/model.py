@@ -10,11 +10,22 @@ mtcnn = MTCNN()
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
 
 
-def get_embedding(img):
-    img_cropped = mtcnn(img, save_path=None)
+def get_embedding(img, prob_threshold=0.2):
+    """
+    Get the vector embedding of a face from an image
+    :param img: the image to detect a face
+    :param prob_threshold: the probability threshold to say there are no faces in the image
+    :return: boolean: whether there is a face, tensor: the vector embedding
+    """
+    try:
+        img_cropped, prob = mtcnn(img, save_path=None, return_prob=True)
+    except TypeError:
+        return False, None
+    if prob < prob_threshold:
+        return False, None
     with torch.no_grad():
         img_embedding = resnet(img_cropped.unsqueeze(0))
-    return img_embedding
+    return True, img_embedding
 
 
 def save_labeled_vec(vec: torch.Tensor, label: str, save_dir='./data'):
@@ -74,12 +85,12 @@ def create_training_data(path: str) -> np.ndarray:
 def knn(features: np.ndarray, labels: np.ndarray, n=5) -> KNeighborsClassifier:
     """
     Initialize a KNN classifier on the image data
-    
+
     Parameters:
         features (numpy array): matrix where each row are the pixel values for an image
         labels (numpy array): vector where each value is the label for the corresponding row
         n (int): Number of neighbors to use by default for kneighbors queries.
-        
+
     Returns:
         knn_model (KNeighborsClassifer): a scikit-learn knn classifer
     """
