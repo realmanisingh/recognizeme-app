@@ -5,11 +5,13 @@
 
 from flask import Flask, request, render_template, redirect
 
-from model_package.model import get_embedding, save_labeled_vec
+from model_package.model import get_embedding, save_labeled_vec, create_training_data, knn
 from model_package.preprocessing import Preprocessor
 
 app = Flask(__name__, template_folder="views")
 
+train_features, train_labels = create_training_data('data')
+classifer, label_encoder = knn(train_features, train_labels)
 
 @app.route('/')
 def home():
@@ -53,16 +55,17 @@ def submit():
     pixel_arr = preprocessor.decode_bytes(encoded)
     img = preprocessor.get_cv2_image(pixel_arr)
 
-    print(img)
     success, vec = get_embedding(img)
-    if success:
-        print(vec.shape)
-    else:
+    if not success:
         print('No face detected!')
         return render_template('not_human.html')
 
+    prediction = classifer.predict(vec.numpy())
+    label = label_encoder.inverse_transform(prediction)
+    context = {'user': label[0]}
+
     if image:
-        return render_template('logged_in.html')
+        return render_template('logged_in.html', **context)
     return render_template("unauthorized.html")
 
 

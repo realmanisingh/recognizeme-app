@@ -101,4 +101,4 @@ def knn(features: np.ndarray, labels: np.ndarray, n=5) -> KNeighborsClassifier:
     model = KNeighborsClassifier(n_neighbors=n)
     model.fit(features, labels)
 
-    return model
+    return model, le
