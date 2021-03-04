@@ -6,12 +6,6 @@ from sklearn.preprocessing import LabelEncoder
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
-<<<<<<< HEAD
-import pandas as pd
-=======
-import torch
-from facenet_pytorch import MTCNN, InceptionResnetV1
->>>>>>> d0f40f7b1e9d9e25e7f25e8d2d794670039b490c
 
 mtcnn = MTCNN()
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
