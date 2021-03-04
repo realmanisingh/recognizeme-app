@@ -4,13 +4,9 @@
 # Minor modifications made by Dharmesh Tarapore <dharmesh@cs.bu.eu>
 
 from flask import Flask, request, render_template, redirect
-from PIL import Image
-import torch
-from werkzeug.datastructures import IfRange
-from model_package.preprocessing import Preprocessor
 
 from model_package.model import get_embedding, save_labeled_vec
-
+from model_package.preprocessing import Preprocessor
 
 app = Flask(__name__, template_folder="views")
 
@@ -37,8 +33,9 @@ def submit_label():
     encoded = preprocessor.get_base64()
     pixel_arr = preprocessor.decode_bytes(encoded)
     img = preprocessor.get_cv2_image(pixel_arr)
-    vec = get_embedding(img)
-    save_labeled_vec(vec, request.form['label'])
+    success, vec = get_embedding(img)
+    if success:
+        save_labeled_vec(vec, request.form['label'])
     return redirect('/label')
 
 
@@ -56,14 +53,17 @@ def submit():
     pixel_arr = preprocessor.decode_bytes(encoded)
     img = preprocessor.get_cv2_image(pixel_arr)
 
-
     print(img)
-    vec = get_embedding(img)
-    print(vec.shape)
+    success, vec = get_embedding(img)
+    if success:
+        print(vec.shape)
+    else:
+        print('No face detected!')
 
     if image:
         return render_template('logged_in.html')
     return render_template("unauthorized.html")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
