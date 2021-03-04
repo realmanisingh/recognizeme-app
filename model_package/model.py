@@ -2,6 +2,7 @@ import os
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import torch
 import numpy as np
+import pandas as pd
 
 mtcnn = MTCNN()
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
@@ -31,5 +32,40 @@ def save_labeled_vec(vec: torch.Tensor, label: str, save_dir='./data'):
     path = os.path.join(label_path, f'{next_i}.npy')
     np.save(path, vec.squeeze().numpy())
     print(f'saved vector to {path}')
+    
 
-
+def create_training_data(path: str) -> np.ndarray:
+    """
+    Create a feature matrix and label vectors for the images in the data
+    directory
+    
+    Parameters:
+        path (str): relative path of the data directory
+    
+    Returns:
+        train_features (numpy array): matrix where each row is the pixel values for an image
+        train_labels (numpy array): vector where each value is the label for the corresponding row
+        in the matrix
+    """
+    labels = os.listdir(path)
+    if '.DS_Store' in labels:
+        labels.remove('.DS_Store')
+    
+    train_features = []
+    train_labels = []
+    for label in labels:
+        label_path = f'{path}/{label}'
+        images = os.listdir(label_path)
+        
+        for filename in images:
+            np_arr = np.load(f'{label_path}/{filename}')
+            train_labels.append(label)
+            train_features.append(np_arr)
+    
+    train_features = np.array(train_features)
+    train_labels = np.array(train_labels)
+    print(train_features.shape)
+    print(train_labels.shape)
+    
+    return train_features, train_labels
+                
