@@ -59,6 +59,7 @@ def submit():
         print(vec.shape)
     else:
         print('No face detected!')
+        return render_template('not_human.html')
 
     if image:
         return render_template('logged_in.html')
