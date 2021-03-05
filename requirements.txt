@@ -4,3 +4,4 @@ flask
 numpy
 opencv-python
 facenet-pytorch
+gunicorn
