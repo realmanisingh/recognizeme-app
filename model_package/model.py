@@ -2,9 +2,11 @@ import os
 
 import numpy as np
 import torch
+from torch.distributions import MultivariateNormal
 from facenet_pytorch import MTCNN, InceptionResnetV1
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.preprocessing import LabelEncoder
+from sklearn.mixture import BayesianGaussianMixture
 
 mtcnn = MTCNN()
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
@@ -102,3 +104,45 @@ def knn(features: np.ndarray, labels: np.ndarray, n=5) -> KNeighborsClassifier:
     model.fit(features, labels)
 
     return model, le
+
+
+def get_classifier(features, labels):
+    gm = BayesianGaussianMixture(n_components=len(np.unique(labels)))
+
+    labels = labels.reshape((labels.shape[0], 1))
+    le = LabelEncoder()
+    labels = le.fit_transform(labels)
+    gm.fit(features, labels)
+    x = gm.predict_proba(features)
+
+    return gm
+
+
+class Classifier:
+    def __init__(self):
+        self.distributions = {}
+        self.labels = None
+        self.threshold = 0.1
+
+    def fit(self, X, y):
+        self.labels = np.unique(y)
+        for label in self.labels:
+            indices = y == label
+            features_subset = X[indices]
+            mean = np.mean(features_subset, axis=0)
+            var = np.var(features_subset, axis=0)
+            self.distributions[label] = (mean, var)
+        return self
+
+    def predict(self, X):
+        probs = torch.zeros(len(self.labels), len(X))
+        for i, label in enumerate(self.labels):
+            mean, var = self.distributions[label]
+            cov = torch.diag(torch.tensor(var))
+            dist = MultivariateNormal(torch.tensor(mean).unsqueeze(0), cov.unsqueeze(0))
+            probs[i] = dist.log_prob(torch.tensor(X))
+        values, indices = torch.max(probs, dim=0)
+        ood = values < self.threshold
+        prediction = self.labels[indices.numpy()]
+        prediction[ood.numpy()] = 'random'
+        return prediction

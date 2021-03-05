@@ -5,13 +5,14 @@
 
 from flask import Flask, request, render_template, redirect
 
-from model_package.model import get_embedding, save_labeled_vec, create_training_data, knn
+from model_package.model import get_embedding, save_labeled_vec, create_training_data, Classifier
 from model_package.preprocessing import Preprocessor
 
 app = Flask(__name__, template_folder="views")
 
 train_features, train_labels = create_training_data('data')
-classifer, label_encoder = knn(train_features, train_labels)
+classifer = Classifier()
+classifer.fit(train_features, train_labels)
 
 @app.route('/')
 def home():
@@ -61,10 +62,10 @@ def submit():
         return render_template('not_human.html')
 
     prediction = classifer.predict(vec.numpy())
-    label = label_encoder.inverse_transform(prediction)
-    context = {'user': label[0]}
 
-    if image:
+    context = {'user': prediction[0]}
+
+    if context['user'] != 'random':
         return render_template('logged_in.html', **context)
     return render_template("unauthorized.html")
 
