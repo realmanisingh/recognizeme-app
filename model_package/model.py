@@ -119,10 +119,10 @@ def get_classifier(features, labels):
 
 
 class Classifier:
-    def __init__(self):
+    def __init__(self, threshold=-1):
         self.distributions = {}
         self.labels = None
-        self.threshold = 0.1
+        self.threshold = threshold
 
     def fit(self, X, y):
         self.labels = np.unique(y)
