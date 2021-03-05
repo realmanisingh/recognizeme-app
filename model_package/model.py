@@ -2,11 +2,8 @@ import os
 
 import numpy as np
 import torch
-from torch.distributions import MultivariateNormal
 from facenet_pytorch import MTCNN, InceptionResnetV1
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import LabelEncoder
-from sklearn.mixture import BayesianGaussianMixture
+from torch.distributions import MultivariateNormal
 
 mtcnn = MTCNN()
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
@@ -82,40 +79,6 @@ def create_training_data(path: str) -> np.ndarray:
     print(train_labels.shape)
 
     return train_features, train_labels
-
-
-def knn(features: np.ndarray, labels: np.ndarray, n=5) -> KNeighborsClassifier:
-    """
-    Initialize a KNN classifier on the image data
-
-    Parameters:
-        features (numpy array): matrix where each row are the pixel values for an image
-        labels (numpy array): vector where each value is the label for the corresponding row
-        n (int): Number of neighbors to use by default for kneighbors queries.
-
-    Returns:
-        knn_model (KNeighborsClassifer): a scikit-learn knn classifer
-    """
-    labels = labels.reshape((labels.shape[0], 1))
-    le = LabelEncoder()
-    labels = le.fit_transform(labels)
-
-    model = KNeighborsClassifier(n_neighbors=n)
-    model.fit(features, labels)
-
-    return model, le
-
-
-def get_classifier(features, labels):
-    gm = BayesianGaussianMixture(n_components=len(np.unique(labels)))
-
-    labels = labels.reshape((labels.shape[0], 1))
-    le = LabelEncoder()
-    labels = le.fit_transform(labels)
-    gm.fit(features, labels)
-    x = gm.predict_proba(features)
-
-    return gm
 
 
 class Classifier:

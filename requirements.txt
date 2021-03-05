@@ -2,4 +2,3 @@ flask
 numpy
 opencv-python
 facenet-pytorch
-scikit-learn

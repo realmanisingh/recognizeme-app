@@ -14,6 +14,7 @@ train_features, train_labels = create_training_data('data')
 classifer = Classifier()
 classifer.fit(train_features, train_labels)
 
+
 @app.route('/')
 def home():
     return render_template('./index.html')
