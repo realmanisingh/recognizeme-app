@@ -13,3 +13,5 @@ pip install -r requirements.txt
 ```
 python app.py
 ```
+## Heroku
+add `https://github.com/heroku/heroku-buildpack-apt.git` to your buildpack settings
